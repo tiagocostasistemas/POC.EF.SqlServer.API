@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using POC.EF.SqlServer.API.Data.Context;
+using POC.EF.SqlServer.API.Context;
 using POC.EF.SqlServer.API.DTOs.Company;
-using POC.EF.SqlServer.API.Entities;
-using POC.EF.SqlServer.API.Helpers.Mappers;
+using POC.EF.SqlServer.API.Services.Interfaces;
 
 namespace POC.EF.SqlServer.API.Controllers
 {
@@ -11,115 +9,51 @@ namespace POC.EF.SqlServer.API.Controllers
     [ApiController]
     public class CompaniesController : ControllerBase
     {
-        [HttpGet]
-        public async Task<IActionResult> GetAsync([FromServices] AppDbContext context)
-        {
-            var companies = await context.Companies.Include(company => company.Employees).ToListAsync();
-            var companiesResponse = CompanyMapper.Map(companies);
+        private readonly ICompanyService _service;
 
-            return Ok(companiesResponse);
+        public CompaniesController(ICompanyService service)
+        {
+            _service = service;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetByIdAsync([FromServices] AppDbContext context,
-                                                      [FromRoute] int id)
+        [HttpGet]
+        public async Task<IActionResult> GetAsync()
         {
-            var company = await context.Companies.Include(company => company.Employees)
-                .AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            var companies = await _service.GetAll();
+            return companies is null ? NotFound() : Ok(companies);
+        }
+       
 
-            if (company is null) return NotFound();
-
-            var companyResponse = CompanyMapper.Map(company);
-
-            return companyResponse is null ? NotFound() : Ok(companyResponse);
+        [HttpGet("{id}", Name = "GetCompanyByIdAsync")]
+        public async Task<IActionResult> GetByIdAsync(int id)
+        {
+            var company = await _service.GetById(id);
+            return company is null ? NotFound() : Ok(company);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAsync([FromServices] AppDbContext context,
-                                                   [FromBody] CompanyRequest request)
+        public async Task<IActionResult> PostAsync([FromBody] CompanyRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest();
+            if (!ModelState.IsValid) return BadRequest();
 
-            var company = new Company()
-            {
-                Name = request.Name,
-                Street = request.Street,
-                Number = request.Number,
-                Complement = request.Complement,
-                District = request.District,
-                City = request.City,
-                State = request.State,
-                ZipCode = request.ZipCode,
-                Phone = request.Phone,
-            };
-
-            try
-            {
-                await context.Companies.AddAsync(company);
-                await context.SaveChangesAsync();
-                return Created($"v1/companies/{company.Id}", company);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            var company = await _service.Insert(request);
+            return company is null ? BadRequest() : Created($"GetCompanyByIdAsync/{company.Id}", company);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAsync([FromServices] AppDbContext context,
-                                                  [FromBody] CompanyRequest request,
-                                                  [FromRoute] int id)
+        public async Task<IActionResult> PutAsync([FromBody] CompanyRequest request, int id)
         {
-            if (!ModelState.IsValid)
-                return BadRequest();
+            if (!ModelState.IsValid) return BadRequest();
 
-            var company = await context.Companies.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-
-            if (company is null)
-                return NotFound();
-
-            company.Name = request.Name;
-            company.Street = request.Street;
-            company.Number = request.Number;
-            company.Complement = request.Complement;
-            company.District = request.District;
-            company.City = request.City;
-            company.State = request.State;
-            company.ZipCode = request.ZipCode;
-            company.Phone = request.Phone;
-
-            try
-            {
-                context.Companies.Update(company);
-                await context.SaveChangesAsync();
-                return Ok(company);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            var company = await _service.Update(request);
+            return company is null ? NotFound() : Ok(company);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync([FromServices] AppDbContext context,
-                                                     [FromRoute] int id)
+        public async Task<IActionResult> DeleteAsync([FromServices] AppDbContext context, int id)
         {
-            var company = await context.Companies.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-
-            if (company is null)
-                return NotFound();
-
-            try
-            {
-                context.Companies.Remove(company);
-                await context.SaveChangesAsync();
-                return Ok();
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            var company = await _service.Delete(id);
+            return company is null ? NotFound() : Ok(company);
         }
     }
 }

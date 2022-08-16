@@ -1,5 +1,9 @@
-using POC.EF.SqlServer.API.Data.Context;
+using POC.EF.SqlServer.API.Context;
 using POC.EF.SqlServer.API.Extensions;
+using POC.EF.SqlServer.API.Repositories;
+using POC.EF.SqlServer.API.Repositories.Interfaces;
+using POC.EF.SqlServer.API.Services;
+using POC.EF.SqlServer.API.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,10 +14,16 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>();
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+
 builder.Services.AddRefitServices();
 
-builder.Services.AddCors(
-    options => options.AddPolicy("all", policy => policy.WithOrigins("*")
+builder.Services.AddCors(options => options.AddPolicy("all", policy => policy.WithOrigins("*")
     .WithHeaders("*").WithMethods("*")));
 
 var app = builder.Build();

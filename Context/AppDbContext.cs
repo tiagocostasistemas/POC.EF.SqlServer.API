@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using POC.EF.SqlServer.API.Entities;
 
-namespace POC.EF.SqlServer.API.Data.Context
+namespace POC.EF.SqlServer.API.Context
 {
     public class AppDbContext : DbContext
     {

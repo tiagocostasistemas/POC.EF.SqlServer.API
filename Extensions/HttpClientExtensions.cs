@@ -1,4 +1,4 @@
-﻿using POC.EF.SqlServer.API.Services;
+﻿using POC.EF.SqlServer.API.Services.Interfaces;
 using Refit;
 using System.Text.Json;
 using System.Text.Json.Serialization;

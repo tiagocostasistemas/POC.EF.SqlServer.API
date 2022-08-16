@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "POC.EF.SqlServer.API", "POC.EF.SqlServer.API.csproj", "{B60E0408-2E8A-44AB-8F80-2A3598E947AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "POC.EF.SqlServer.API", "POC.EF.SqlServer.API.csproj", "{B60E0408-2E8A-44AB-8F80-2A3598E947AB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DA0BF1CB-1DA5-40BA-992D-E1447934AD81}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

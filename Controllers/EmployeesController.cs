@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using POC.EF.SqlServer.API.Data.Context;
+using POC.EF.SqlServer.API.Context;
 using POC.EF.SqlServer.API.DTOs.Employee;
 using POC.EF.SqlServer.API.Entities;
 using POC.EF.SqlServer.API.Helpers.Mappers;
+using POC.EF.SqlServer.API.Services.Interfaces;
 
 namespace POC.EF.SqlServer.API.Controllers
 {
@@ -11,112 +12,51 @@ namespace POC.EF.SqlServer.API.Controllers
     [ApiController]
     public class EmployeesController : ControllerBase
     {
-        [HttpGet]
-        public async Task<IActionResult> GetAsync([FromServices] AppDbContext context)
+        private readonly IEmployeeService _service;
+
+        public EmployeesController(IEmployeeService service)
         {
-            var employees = await context.Employees.Include(employee => employee.Company).ToListAsync();
+            _service = service;
+        }
 
-            var employeesDTO = EmployeeMapper.Map(employees);
-
-            return Ok(employeesDTO);
+        [HttpGet]
+        public async Task<IActionResult> GetAsync()
+        {
+            var employees = await _service.GetAll();
+            return employees is null ? NotFound() : Ok(employees);
         }
 
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetByIdAsync([FromServices] AppDbContext context,
-                                                      [FromRoute] int id)
+        [HttpGet("{id}", Name = "GetEmployeeByIdAsync")]
+        public async Task<IActionResult> GetByIdAsync(int id)
         {
-            var employee = await context.Employees.Include(employee => employee.Company)
-                .AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-
-            if (employee is null) return NotFound();
-
-            var employeeDTO = EmployeeMapper.Map(employee);
-
-            return employeeDTO is null ? NotFound() : Ok(employeeDTO);
+            var employee = await _service.GetById(id);
+            return employee is null ? NotFound() : Ok(employee);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAsync([FromServices] AppDbContext context,
-                                                   [FromBody] EmployeeRequest request)
+        public async Task<IActionResult> PostAsync([FromBody] EmployeeRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest();
+            if (!ModelState.IsValid) return BadRequest();
 
-            var company = await context.Companies.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.CompanyId);
-
-            if (company is null)
-                return BadRequest();
-
-            var employee = new Employee()
-            {
-                Name = request.Name,
-                Position = request.Position,
-                Salary = request.Salary,
-                CompanyId = company.Id
-            };
-
-            try
-            {
-                await context.Employees.AddAsync(employee);
-                await context.SaveChangesAsync();
-                return Created($"v1/employees/{employee.Id}", null);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            var employee = await _service.Insert(request);
+            return employee is null ? BadRequest() : Created($"GetEmployeeByIdAsync/{employee.Id}", employee);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAsync([FromServices] AppDbContext context,
-                                                  [FromBody] EmployeeRequest request,
-                                                  [FromRoute] int id)
+        public async Task<IActionResult> PutAsync([FromBody] EmployeeRequest request, int id)
         {
-            if (!ModelState.IsValid)
-                return BadRequest();
+            if (!ModelState.IsValid) return BadRequest();
 
-            var employee = await context.Employees.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-
-            if (employee is null)
-                return NotFound();
-
-            employee.Name = request.Name;
-            employee.Position = request.Position;
-            employee.Salary = request.Salary;
-            employee.CompanyId = request.CompanyId;
-
-            try
-            {
-                context.Employees.Update(employee);
-                await context.SaveChangesAsync();
-                return Ok(employee);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            var employee = await _service.Update(request);
+            return employee is null ? NotFound() : Ok(employee);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAsync([FromServices] AppDbContext context,
-                                                     [FromRoute] int id)
+        public async Task<IActionResult> DeleteAsync(int id)
         {
-            var employee = await context.Employees.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-
-            if (employee is null)
-                return NotFound();
-
-            try
-            {
-                context.Employees.Remove(employee);
-                await context.SaveChangesAsync();
-                return Ok();
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            var employee = await _service.Delete(id);
+            return employee is null ? NotFound() : Ok(employee);
         }
     }
 }

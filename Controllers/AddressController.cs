@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using POC.EF.SqlServer.API.Services;
+using POC.EF.SqlServer.API.Services.Interfaces;
 
 namespace POC.EF.SqlServer.API.Controllers
 {
