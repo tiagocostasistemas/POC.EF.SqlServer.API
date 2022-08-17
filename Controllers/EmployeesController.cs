@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using POC.EF.SqlServer.API.Context;
 using POC.EF.SqlServer.API.DTOs.Employee;
-using POC.EF.SqlServer.API.Entities;
-using POC.EF.SqlServer.API.Helpers.Mappers;
 using POC.EF.SqlServer.API.Services.Interfaces;
 
 namespace POC.EF.SqlServer.API.Controllers
